@@ -16,6 +16,48 @@ const posts = [
         type: 'Обычный',
         likes: -2,
     },
+    {
+        id: nextId++,
+        text: 'Third post',
+        type: 'Обычный',
+        likes: -2,
+    },
+    {
+        id: nextId++,
+        text: 'Fourth post',
+        type: 'Обычный',
+        likes: -2,
+    },
+    {
+        id: nextId++,
+        text: 'Fifth post',
+        type: 'Обычный',
+        likes: -2,
+    },
+    {
+        id: nextId++,
+        text: 'Sixth post',
+        type: 'Обычный',
+        likes: -2,
+    },
+    {
+        id: nextId++,
+        text: 'Seventh post',
+        type: 'Обычный',
+        likes: -2,
+    },
+    {
+        id: nextId++,
+        text: 'Eighth post',
+        type: 'Обычный',
+        likes: -2,
+    },
+    {
+        id: nextId++,
+        text: 'Nineth post',
+        type: 'Обычный',
+        likes: -2,
+    },
 ]
 
 const server = express();
@@ -23,50 +65,83 @@ const server = express();
 server.use(express.json());
 server.use(cors());
 
-server.get('/posts', (req, res) => {
-    res.send(posts);
+server.get('/posts/get-old-posts/:lastSeenPostId', (req, res) => {
+    const lastSeenPostId = +req.params['lastSeenPostId']
+    let sendPosts;
+    if (lastSeenPostId === 0) {
+        sendPosts = posts.slice(posts.length - 5);
+    } else {
+        const index = posts.findIndex(post => post.id === lastSeenPostId);
+        if (index - 5 < 0) {
+            sendPosts = posts.slice(0, index);
+        } else {
+            sendPosts = posts.slice(index - 5, index);
+        }
+    }
+    res.send(sendPosts);
 });
 
-server.delete('/posts/:id', (req, res) => {
-    const id = +req.params['id'];
-    const index = posts.findIndex((post) => {
-        return post.id === id;
-    });
+server.get('/posts/get-fresh-posts/:freshestPostId', (req, res) => {
+    const freshestPostId = +req.params['freshestPostId'];
+    let sendPosts;
+    const index = posts.findIndex(post => post.id === freshestPostId);
     if (index === -1) {
-        res.status(404);
-        res.send('There is no such post');
-        return;
+        sendPosts = posts.filter(post => post.id > freshestPostId);
+    } else {
+        sendPosts = posts.slice(index+1);
     }
-    posts.splice(index, 1);
-    res.send(posts);
+    res.send(sendPosts);
 })
 
-server.delete('/posts/like/:id', (req, res) => {
+server.get('/posts/old-posts-check/:thirdPostId', (req, res) => {
+    const thirdPostId = +req.params['thirdPostId'];
+    console.log(thirdPostId, posts[0].id);
+    if (thirdPostId === posts[0].id) {
+        res.send(true);
+        return;
+    }
+    res.send(false);
+})
+
+server.get('/posts/fresh-posts-check/:freshestPostId', (req, res) => {
+    const freshestPostId = +req.params['freshestPostId'];
+    if (posts.length === 0) {
+        res.send('false');
+        return;
+    } else if (freshestPostId < posts[posts.length-1].id) {
+        res.send('true');
+        return;
+    }
+    res.send('false');
+})
+
+server.post('/posts/like/:id', (req, res) => {
     const id = +req.params['id'];
     const index = posts.findIndex((post) => {
         return post.id === id;
     });
     posts[index].likes++;
-    res.send(posts);
+    res.send(`${posts[index].likes}`);
 })
 
-server.delete('/posts/dislike/:id', (req, res) => {
+server.post('/posts/dislike/:id', (req, res) => {
     const id = +req.params['id'];
     const index = posts.findIndex((post) => {
         return post.id === id;
     });
-    posts[index].likes--;
-    res.send(posts);
+    posts[index].likes--
+    res.send(`${posts[index].likes}`);
 })
 
 server.post('/posts', (req, res) => {
-    posts.push({
+    const newPost = {
         id: nextId++,
         text: req.body.text,
         likes: 0,
         type: req.body.type
-    })
-    res.send(posts);
+    }
+    posts.push(newPost)
+    res.send([newPost]);
 })
 
 server.listen(process.env.PORT || '9999');

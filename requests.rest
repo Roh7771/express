@@ -1,12 +1,22 @@
-GET http://localhost:8080/posts/
+@host = http://localhost:9999
+
+GET {{host}}/posts/
 
 ###
 
-DELETE http://localhost:8080/posts/3
+GET {{host}}/posts/fresh-check/8
 
 ###
 
-POST http://localhost:8080/posts/
+DELETE {{host}}/posts/2
+
+###
+
+POST {{host}}/posts/like/9
+
+###
+
+POST {{host}}/posts/
 Content-Type: application/json
 
 {
