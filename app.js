@@ -95,7 +95,6 @@ server.get('/posts/get-fresh-posts/:freshestPostId', (req, res) => {
 
 server.get('/posts/old-posts-check/:thirdPostId', (req, res) => {
     const thirdPostId = +req.params['thirdPostId'];
-    console.log(thirdPostId, posts[0].id);
     if (thirdPostId === posts[0].id) {
         res.send(true);
         return;
