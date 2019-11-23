@@ -69,7 +69,7 @@ server.get('/posts/get-old-posts/:lastSeenPostId', (req, res) => {
     const lastSeenPostId = +req.params['lastSeenPostId']
     let sendPosts;
     if (lastSeenPostId === 0) {
-        sendPosts = posts.length < 5 ? posts : posts.slice(posts.length - 3);
+        sendPosts = posts.length < 5 ? posts : posts.slice(posts.length - 5);
     } else {
         const filteredPosts = posts.filter(post => post.id < lastSeenPostId);
         sendPosts = filteredPosts.length < 5 ? filteredPosts : filteredPosts.slice(filteredPosts.length - 5);    
