@@ -69,33 +69,23 @@ server.get('/posts/get-old-posts/:lastSeenPostId', (req, res) => {
     const lastSeenPostId = +req.params['lastSeenPostId']
     let sendPosts;
     if (lastSeenPostId === 0) {
-        sendPosts = posts.slice(posts.length - 5);
+        sendPosts = posts.length < 5 ? posts : posts.slice(posts.length - 3);
     } else {
-        const index = posts.findIndex(post => post.id === lastSeenPostId);
-        if (index - 5 < 0) {
-            sendPosts = posts.slice(0, index);
-        } else {
-            sendPosts = posts.slice(index - 5, index);
-        }
+        const filteredPosts = posts.filter(post => post.id < lastSeenPostId);
+        sendPosts = filteredPosts.length < 5 ? filteredPosts : filteredPosts.slice(filteredPosts.length - 5);    
     }
     res.send(sendPosts);
 });
 
 server.get('/posts/get-fresh-posts/:freshestPostId', (req, res) => {
     const freshestPostId = +req.params['freshestPostId'];
-    let sendPosts;
-    const index = posts.findIndex(post => post.id === freshestPostId);
-    if (index === -1) {
-        sendPosts = posts.filter(post => post.id > freshestPostId);
-    } else {
-        sendPosts = posts.slice(index+1);
-    }
+    const sendPosts = posts.filter(post => post.id > freshestPostId);
     res.send(sendPosts);
 })
 
-server.get('/posts/old-posts-check/:thirdPostId', (req, res) => {
-    const thirdPostId = +req.params['thirdPostId'];
-    if (thirdPostId === posts[0].id) {
+server.get('/posts/old-posts-check/:fifthPostId', (req, res) => {
+    const fifthPostId = +req.params['fifthPostId'];
+    if (fifthPostId === posts[0].id) {
         res.send(true);
         return;
     }
@@ -105,13 +95,26 @@ server.get('/posts/old-posts-check/:thirdPostId', (req, res) => {
 server.get('/posts/fresh-posts-check/:freshestPostId', (req, res) => {
     const freshestPostId = +req.params['freshestPostId'];
     if (posts.length === 0) {
-        res.send('false');
+        res.send(false);
         return;
-    } else if (freshestPostId < posts[posts.length-1].id) {
-        res.send('true');
+    } else if (freshestPostId < posts[posts.length - 1].id) {
+        res.send(true);
         return;
     }
-    res.send('false');
+    res.send(false);
+})
+
+server.delete('/posts/:id', (req, res) => {
+    const id = +req.params['id'];
+    const index = posts.findIndex((post) => {
+        return post.id === id;
+    });
+    if (index === -1) {
+        res.send('There is no such post');
+        return;
+    }
+    posts.splice(index, 1);
+    res.end();
 })
 
 server.post('/posts/like/:id', (req, res) => {
@@ -140,7 +143,7 @@ server.post('/posts', (req, res) => {
         type: req.body.type
     }
     posts.push(newPost)
-    res.send([newPost]);
+    res.send(newPost);
 })
 
 server.listen(process.env.PORT || '9999');
