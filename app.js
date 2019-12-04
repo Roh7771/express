@@ -1,5 +1,9 @@
 const express = require('express');
 const cors = require('cors');
+const multer = require('multer');
+const uuid = require('uuid');
+const fs = require('fs-extra');
+const path = require('path');
 
 let nextId = 1;
 
@@ -64,6 +68,49 @@ const server = express();
 
 server.use(express.json());
 server.use(cors());
+server.use(express.urlencoded());
+
+const publicPath = path.resolve(__dirname, 'public');
+
+fs.ensureDirSync(publicPath);
+
+server.use('/static', express.static(publicPath)); 
+
+const storage = multer.diskStorage({
+    destination(req, file, callback) {
+        callback(null, publicPath); 
+    },
+    filename(req, file, callback) {
+        const name = uuid.v4();
+
+        if (file.mimetype === 'image/png') {
+            callback(null, `${name}.png`);
+            return;
+        }
+        if (file.mimetype === 'image/jpeg') {
+            callback(null, `${name}.jpg`);
+            return;
+        }
+        if (file.mimetype === 'application/octet-stream') {
+            callback(null, `${name}.webm`);
+            return;
+        }
+        callback(new Error('Invalid media type'));
+    },
+});
+
+const fileUpload = multer({storage}).single('media');
+server.post('/upload', (req, res) => {
+    fileUpload(req, res, err => {
+        if (err) {
+            res.status(400).send(err);
+            return;
+        }
+        setTimeout(() => {
+            res.send({name: req.file.filename});
+        }, 5000);  
+    });
+});
 
 server.get('/posts/get-old-posts/:lastSeenPostId', (req, res) => {
     const lastSeenPostId = +req.params['lastSeenPostId']
@@ -140,7 +187,8 @@ server.post('/posts', (req, res) => {
         id: nextId++,
         text: req.body.text,
         likes: 0,
-        type: req.body.type
+        type: req.body.type,
+        url: req.body.url
     }
     posts.push(newPost)
     res.send(newPost);
